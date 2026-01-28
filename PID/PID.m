@@ -42,11 +42,11 @@ if(Flag.sat == 1)
     end
 end
 
-%% clamp
+%% Clamp
 if(Flag.clamp == 1)
-    if pidout >= Pid.threshold && Pid.Ki*err > 0
+    if pidout >= Pid.threshold && err > 0
         integ_flag = 1;
-    elseif pidout <= -Pid.threshold && Pid.Ki*err < 0
+    elseif pidout <= -Pid.threshold && err < 0
         integ_flag = 1;
     else
         integ_flag = 0;

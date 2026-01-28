@@ -4,24 +4,29 @@ function Init
 global Flag Pid Plant Hall PidOut PlantOut HallOut
 
 %% Param set
+% Basic
 Pid.fs = 2e3;
+Pid.tend = 2;
 Pid.Ts = 1/Pid.fs;
-Pid.tend = 10;
 Pid.T = 0:Pid.Ts:Pid.tend;
-
-Pid.gyroAmp = 1000;
-Pid.gyroFreq = 4;
-Pid.target = Pid.gyroAmp*sin(2*pi*Pid.gyroFreq*Pid.T);
 
 Pid.CrosFreq = 200;
 Pid.PM = 60;
 
+% Target
+Pid.gyroAmp = 1000;
+Pid.gyroFreq = 4;
+Pid.target = Pid.gyroAmp*sin(2*pi*Pid.gyroFreq*Pid.T);
+
+% Flag
 Flag.ff = 1;
 Flag.sat = 1;
 Flag.clamp = 1;
 Flag.iir = 1;
 Flag.notch = 0;
-disp("pid param set: ok")
+
+disp("param set: ok")
+
 %% Out
 PidOut = zeros(1, length(Pid.target));
 PlantOut = zeros(1, length(Pid.target));
@@ -33,7 +38,7 @@ K = 25; Omega0 = 60; Qm = 2;
 P = tf(K, [1/Omega0^2 1/(Omega0*Qm) 1]);
 disp("plant set: ok")
 
-% Kp, Ki, Kd, Tf
+% Kp, Ki, Kd
 pidtype = "pid";
 opts = pidtuneOptions("CrossoverFrequency",Pid.CrosFreq*2*pi,"PhaseMargin",Pid.PM);
 [C,info] = pidtune(P,pidtype,opts);
@@ -63,8 +68,8 @@ Pid.threshold = 130;
 
 Fc = 400;
 % Diff
-Kd_bs = [Pid.Kd*Fc*2*pi 0];
-Kd_as = [1 Fc*2*pi];
+Kd_bs = [Pid.Kd 0];
+Kd_as = [1/(Fc*2*pi) 1];
 sysd = tf(Kd_bs,Kd_as);
 dsysd = c2d(sysd,Pid.Ts,'t');
 [Pid.Kd_bz,Pid.Kd_az] = tfdata(dsysd,'v');
@@ -97,7 +102,3 @@ alpha = AlphaDesign(400,Pid.fs);
 Hall.iir_bz = [1-alpha, 0];
 Hall.iir_az = [1, -alpha];
 disp("Hall IIR coefficient: ok")
-
-% Notch(Fc:850Hz)
-[Hall.notch_bz,Hall.notch_az,~] = NotchDesign(850,Pid.fs);
-disp("Hall Notch coefficient: ok")
